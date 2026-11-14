@@ -130,5 +130,33 @@ public class ClienteServiceTests
             Times.Never);
     }
 
+    [Fact]
+    public void ObtenerPorId_ClienteExistente_DebeRetornarClienteYConsultarRepositorioUnaVez()
+    {
+        // Arrange: el repositorio simulado devuelve un cliente para el Id 1
+        var clienteEsperado = new Cliente
+        {
+            Id = 1,
+            Nombre = "Ana López",
+            Correo = "ana@example.com"
+        };
 
+        _repositoryMock
+            .Setup(r => r.ObtenerPorId(1))
+            .Returns(clienteEsperado);
+
+        // Act
+        var resultado = _service.ObtenerPorId(1);
+
+        // Assert
+        Assert.NotNull(resultado);
+        Assert.Same(clienteEsperado, resultado);
+        Assert.Equal(1, resultado.Id);
+        Assert.Equal("Ana López", resultado.Nombre);
+        Assert.Equal("ana@example.com", resultado.Correo);
+
+        _repositoryMock.Verify(
+            r => r.ObtenerPorId(1),
+            Times.Once);
+    }
 }

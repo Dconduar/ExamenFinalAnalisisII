@@ -64,6 +64,62 @@ public class ClientesApiTests
             response.StatusCode);
     }
 
+    [Fact]
+    public async Task ObtenerPorId_ClienteExistente_DebeRetornar200()
+    {
+        // Arrange: registrar un cliente mediante la API
+        using var factory = new ClienteApiFactory();
+        using var client = factory.CreateClient();
+
+        var solicitud = new
+        {
+            Nombre = "Carlos Pérez",
+            Correo = $"carlos_{Guid.NewGuid():N}@example.com"
+        };
+
+        var respuestaRegistro = await client.PostAsJsonAsync(
+            "/api/Clientes",
+            solicitud);
+
+        var clienteRegistrado = await respuestaRegistro.Content
+            .ReadFromJsonAsync<ClienteRespuesta>();
+
+        Assert.NotNull(clienteRegistrado);
+
+        // Act
+        var response = await client.GetAsync(
+            $"/api/Clientes/{clienteRegistrado.Id}");
+
+        // Assert
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
+
+        var cliente = await response.Content
+            .ReadFromJsonAsync<ClienteRespuesta>();
+
+        Assert.NotNull(cliente);
+        Assert.Equal(clienteRegistrado.Id, cliente.Id);
+        Assert.Equal(solicitud.Nombre, cliente.Nombre);
+        Assert.Equal(solicitud.Correo, cliente.Correo);
+    }
+
+    [Fact]
+    public async Task ObtenerPorId_ClienteInexistente_DebeRetornar404()
+    {
+        // Arrange
+        using var factory = new ClienteApiFactory();
+        using var client = factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/Clientes/999999");
+
+        // Assert
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            response.StatusCode);
+    }
+
     private sealed record ClienteRespuesta(
         int Id,
         string Nombre,
